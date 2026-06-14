@@ -533,20 +533,35 @@ window.addEventListener('load',()=>{
     } catch(e) { _suppressSave=false; }
     return;
   }
-  // 2순위: IndexedDB에 저장된 데이터
-  loadFromIDB().then(saved=>{
-    if(!saved) return;
-    try {
+  // 2순위: 같은 서버의 엑셀 파일 자동 로드
+  fetch('포폴_로우데이터.xlsm')
+    .then(r=>{ if(!r.ok) throw new Error('not found'); return r.arrayBuffer(); })
+    .then(ab=>{
       _suppressSave=true;
-      parseXlsx(saved.ab, saved.fname);
-      _lastAb=saved.ab; _lastFname=saved.fname;
+      parseXlsx(ab,'포폴_로우데이터.xlsm');
+      _lastAb=ab; _lastFname='포폴_로우데이터.xlsm';
       _suppressSave=false;
       try { const s=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(s){ applySettings(s); } } catch(e){}
       updateDashboard();
-      setBadge('저장된 데이터 복원됨 ✓','#e3f2fd','#1565c0');
+      setBadge('서버 데이터 로드됨 ✓','#e8f5e9','#2e7d32');
       document.getElementById('exportBtn').style.display='';
-    } catch(e) { _suppressSave=false; }
-  }).catch(()=>{ _suppressSave=false; });
+    })
+    .catch(()=>{
+      // 3순위: IndexedDB에 저장된 데이터
+      loadFromIDB().then(saved=>{
+        if(!saved) return;
+        try {
+          _suppressSave=true;
+          parseXlsx(saved.ab, saved.fname);
+          _lastAb=saved.ab; _lastFname=saved.fname;
+          _suppressSave=false;
+          try { const s=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(s){ applySettings(s); } } catch(e){}
+          updateDashboard();
+          setBadge('저장된 데이터 복원됨 ✓','#e3f2fd','#1565c0');
+          document.getElementById('exportBtn').style.display='';
+        } catch(e) { _suppressSave=false; }
+      }).catch(()=>{ _suppressSave=false; });
+    });
 });
 
 function populateMonthSelectors() {
