@@ -245,6 +245,7 @@ td.sec { border-left: 2px solid #9aaac0 !important; }
     <button class="toggle-btn active" id="btn-j" onclick="tog('j')">직영구분 ON</button>
     <button class="toggle-btn active" id="btn-f" onclick="tog('f')">FM구분 ON</button>
     <button class="toggle-btn" id="btn-p" onclick="tog('p')">단가 OFF</button>
+    <button class="toggle-btn active" id="btn-y5" onclick="tog('y5')">25년실적 ON</button>
   </div>
 
   <div class="table-wrap">
@@ -278,7 +279,7 @@ let rawData = null;
 let currentYear = 26;             // 25 or 26
 let currentBranches = [18];       // branch indices (default: 본부)
 let currentViewName = '본부';
-let showJ=true, showF=true, showP=false;
+let showJ=true, showF=true, showP=false, show25=true;
 let _suppressSave=false;
 
 // ── 브랜치 컬럼 계산 ──────────────────────────────────────
@@ -476,7 +477,7 @@ const LS_KEY = 'portfolioDashboardSettings';
 function saveSettings() {
   if(_suppressSave) return;
   const s = {
-    showJ, showF, showP,
+    showJ, showF, showP, show25,
     currentYear,
     currentViewName,
     currentBranches,
@@ -503,10 +504,11 @@ function applySettings(s) {
   if(isReg){ const g=vn.replace('담당 - ',''); const btn=document.getElementById('rbtn-'+g); if(btn){Object.keys(REGIONAL).forEach(k=>document.getElementById('rbtn-'+k)&&document.getElementById('rbtn-'+k).classList.remove('active')); btn.classList.add('active');} }
   if(isBr){ const b=vn.replace('지사 - ',''); const btn=document.getElementById('bbtn-'+b); if(btn){BRANCH_ORDER.forEach(k=>document.getElementById('bbtn-'+k)&&document.getElementById('bbtn-'+k).classList.remove('active')); btn.classList.add('active');} }
   // 토글
-  showJ=s.showJ!==undefined?s.showJ:true; showF=s.showF!==undefined?s.showF:true; showP=s.showP!==undefined?s.showP:false;
+  showJ=s.showJ!==undefined?s.showJ:true; showF=s.showF!==undefined?s.showF:true; showP=s.showP!==undefined?s.showP:false; show25=s.show25!==undefined?s.show25:true;
   const bj=document.getElementById('btn-j'); bj.textContent=showJ?'직영구분 ON':'직영구분 OFF'; bj.classList.toggle('active',showJ);
   const bf=document.getElementById('btn-f'); bf.textContent=showF?'FM구분 ON':'FM구분 OFF'; bf.classList.toggle('active',showF);
   const bp=document.getElementById('btn-p'); bp.textContent=showP?'단가 ON':'단가 OFF'; bp.classList.toggle('active',showP);
+  const by5=document.getElementById('btn-y5'); by5.textContent=show25?'25년실적 ON':'25년실적 OFF'; by5.classList.toggle('active',show25);
   // 월 선택
   if(s.prevM) document.getElementById('prevMonthSel').value=s.prevM;
   if(s.currM) document.getElementById('currMonthSel').value=s.currM;
@@ -807,7 +809,7 @@ function isVis(level){ if(level===0) return true; if(level===1) return showJ; re
 
 function makeHeader() {
   const p=showP, j=showJ, f=showF&&showJ;
-  const hasRef = currentYear===26;
+  const hasRef = currentYear===26 && show25;
   let r1='<tr>';
   r1+='<th rowspan="2">구분</th>';
   if(j) r1+='<th rowspan="2">직영구분</th>';
@@ -827,7 +829,7 @@ function makeHeader() {
 
 function buildRow(def, prevM, currM) {
   const p=showP;
-  const hasRef=currentYear===26;
+  const hasRef=currentYear===26&&show25;
   const tr=document.createElement('tr');
   tr.dataset.level=def.level||0;
 
@@ -919,7 +921,8 @@ function tog(type) {
   const prevM=parseInt(document.getElementById('prevMonthSel').value)||0;
   if(type==='j'){ showJ=!showJ; const b=document.getElementById('btn-j'); b.textContent=showJ?'직영구분 ON':'직영구분 OFF'; b.classList.toggle('active',showJ);
   } else if(type==='f'){ showF=!showF; const b=document.getElementById('btn-f'); b.textContent=showF?'FM구분 ON':'FM구분 OFF'; b.classList.toggle('active',showF);
-  } else { showP=!showP; const b=document.getElementById('btn-p'); b.textContent=showP?'단가 ON':'단가 OFF'; b.classList.toggle('active',showP);
+  } else if(type==='p'){ showP=!showP; const b=document.getElementById('btn-p'); b.textContent=showP?'단가 ON':'단가 OFF'; b.classList.toggle('active',showP);
+  } else if(type==='y5'){ show25=!show25; const b=document.getElementById('btn-y5'); b.textContent=show25?'25년실적 ON':'25년실적 OFF'; b.classList.toggle('active',show25);
   }
   if(currM) renderTable(prevM||null,currM);
   saveSettings();
